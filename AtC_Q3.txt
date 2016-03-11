@@ -1,0 +1,134 @@
+C - ケーブルチェック（Checking Cable）
+Time limit : 2sec / Stack limit : 256MB / Memory limit : 256MB
+
+Question
+Your task is to connect N computers with cables that can communicate in both directions and to check if those computers can actually interact with each other.
+Your work will follow the two instructions shown below:
+
+make A B time
+Connect Computer A and Computer B with a cable.
+This cable will become unavailable when the value is bigger than time seconds. If the value equals to time seconds, the cable is still available.
+Multiple cables may be connected between aforementioned Computer A and B.
+check A B time
+Predict if computer A and B can communicate within time seconds with the connected cable(s).
+Computer A and B may be connected through other computers.
+If Computer A and B can communicate, output YES in one string. If they can’t, output NO in one string.
+The cables that are connected by all the make instructions existing after particular check instruction are not available in time series.
+The instructions will be processed in the descending order of input.
+
+Determine if Computer A and B are able to communicate every time there is check instruction. If they can communicate, please output YES in one string. If not, output NO in one string.
+
+Input
+Input will be given in the following format from Standard Input:
+
+N Q
+S1 A1 B1 time1
+:
+SQ AQ BQ timeQ
+On the first string, N(2≦N≦20), an integer which shows the number of computers, and Q(1≦Q≦500), another integer which shows the number of the instructions, will be given with a half-width break.
+From the second string to the N?th string, you will be given instructions.
+1≦Ak , Bk≦N and 1≦timek≦104 are guaranteed.
+There are only two kinds of Sk: make or check.
+Output
+Determine if Computer A and B are able to communicate every time there is check instruction. If they can communicate, please output YES in one string. If not, output NO in one string.
+
+Also, make sure to insert a line break at the end of the output.
+Input Example # 1
+3 5
+make 1 2 1000
+check 1 3 500
+make 3 2 2000
+check 1 3 500
+check 1 3 1500
+Output Example #1
+NO
+YES
+NO
+Input Example #2
+4 11
+make 1 2 2000
+make 2 3 3000
+make 3 4 2500
+check 1 4 1500
+check 1 3 2000
+check 1 3 2500
+make 1 4 3000
+check 1 3 2500
+check 1 3 3000
+make 2 4 3000
+check 1 3 3000
+Output Example #2
+YES
+YES
+NO
+YES
+NO
+YES
+
+------------------------------------------
+
+C - ケーブルチェック（Checking Cable）
+時間制限 : 2sec / スタック制限 : 256MB / メモリ制限 : 256MB
+
+問題文
+あなたの仕事は N 個のコンピュータを、双方向に通信可能なケーブルで繋いで、コンピュータ間の通信が可能かどうかを判定することです。あなたの作業は以下に示す 2 つの命令に従って行われます。
+
+make A B time
+コンピュータ A とコンピュータ B をケーブルで繋ぎます。
+このケーブルは time 秒になると使用不能になります。 time 秒ぴったりでは使用可能です。
+同じコンピュータ A と B の間に複数のケーブルが繋がれることもあります。
+check A B time
+コンピュータ A と B が、それまで繋がれたケーブルを使って time 秒に通信が可能かどうかを予測します。
+このとき、他のコンピュータを経由しても構いません。
+通信可能であればYES、そうでなければNOを 1 行で出力します。
+また、ある check 命令の後に存在する全ての make 命令によって繋がれたケーブルは、時系列的に使用できません。
+命令は、入力の上から順番に処理されていきます。
+
+check 命令のあるたびに、コンピュータ A と B が通信可能であるかどうかを判定し、通信可能であればYES、そうでなければNOを 1 行で出力してください。
+
+入力
+入力は以下の形式で標準入力から与えられる。
+
+N Q
+S1 A1 B1 time1
+:
+SQ AQ BQ timeQ
+1 行目に、コンピュータの数を示す整数 N(2≦N≦20) と命令の個数を示す整数 Q(1≦Q≦500) が半角スペース区切りで与えられる。
+2 行目から N 行にわたって、命令が与えられる。
+1≦Ak , Bk≦N かつ 1≦timek≦104 であることが保証されている。
+Sk は make か check の 2 通りしか存在しない。
+出力
+check 命令のあるたびに、コンピュータ A と B が通信可能であるかどうかを判定し、通信可能であればYES、そうでなければNOを 1 行で出力してください。
+
+また、出力の末尾には改行を入れること。
+入力例 1
+3 5
+make 1 2 1000
+check 1 3 500
+make 3 2 2000
+check 1 3 500
+check 1 3 1500
+出力例 1
+NO
+YES
+NO
+入力例 2
+4 11
+make 1 2 2000
+make 2 3 3000
+make 3 4 2500
+check 1 4 1500
+check 1 3 2000
+check 1 3 2500
+make 1 4 3000
+check 1 3 2500
+check 1 3 3000
+make 2 4 3000
+check 1 3 3000
+出力例 2
+YES
+YES
+NO
+YES
+NO
+YES

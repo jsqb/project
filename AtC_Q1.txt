@@ -1,0 +1,125 @@
+A - 頻出文字調査（Finding frequently occurring characters）
+Time limit : 2sec / Stack limit : 256MB / Memory limit : 256MB
+
+Question
+You will be given a character string S, which only consists of half width characters.
+
+Output each character in descending order of the most frequent occurrence, separating each with a newline.
+However, if there multiple alphabets have same number of occurrence, output them in alphabetical order.
+
+Input
+Input will be given in the following format from Standard Input:
+
+S
+A character string S(1≦|S|≦1,000) will be given as one string.
+
+Define the length of the string as |S|
+S consists of 26 alphabets from a to z with half width.
+Output
+Output each character in descending order of the most frequent occurrence, separating each with a newline.
+However, if there multiple alphabets have same number of occurrence, output them in alphabetical order.
+Also, make sure to insert a line break at the end of the output.
+
+Input Example # 1
+
+dcbadcbadcbadde
+
+Output Example #1
+
+d
+a
+b
+c
+e
+
+Output d, the most frequently occurring value, which occurs 5 times.
+Then, a,b, and c occur 3 times, therefore output them in alphabetical order; a,b and c.
+Lastly, output e,which occurs 1 time.
+Do not output that is not contained in the character string S.
+
+Input Example #2
+
+ajklfajdlkfajsdklfjalljaklsdfjaklsdjf
+
+Output Example #2
+
+j
+l
+a
+f
+k
+d
+s
+
+Input Example #3
+
+z
+
+Output Example #3
+
+z
+
+
+----------------------------------
+
+A - 頻出文字調査（Finding frequently occurring characters）
+時間制限 : 2sec / スタック制限 : 256MB / メモリ制限 : 256MB
+
+問題文
+半角英小文字のみで構成された文字列 S が与えられます。
+
+出現回数の多い文字から順に、改行区切りで出力しなさい。
+ただし、出現回数が同じアルファベットが複数ある場合、辞書順で小さいものから順に出力してください。
+
+入力
+入力は以下の形式で標準入力から与えられる。
+
+S
+文字列 S(1≦|S|≦1,000) が 1 行で与えられる。
+
+S の文字列長を |S| と定義する。
+S は半角英小文字aからzの 26 種類の文字から構成される。
+出力
+出現回数の多い文字から順に、改行区切りで出力しなさい。
+ただし、出現回数が同じアルファベットが複数ある場合、辞書順で小さいものから順に出力してください。
+
+また、出力の末尾には改行を入れること。
+
+入力例 1
+
+dcbadcbadcbadde
+
+出力例 1
+
+d
+a
+b
+c
+e
+
+最頻値は 5 回出現しているdなので、これを出力します。
+次に、a, b, c が 3 づつ出現しているので、辞書順で小さい順にabcと出力します。
+最後に、1 回だけ出現しているeを出力します。
+文字列 S に含まれていない文字を出力してはいけません。
+
+入力例 2
+
+ajklfajdlkfajsdklfjalljaklsdfjaklsdjf
+
+出力例 2
+
+j
+l
+a
+f
+k
+d
+s
+
+入力例 3
+
+z
+
+出力例 3
+
+z

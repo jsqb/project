@@ -1,0 +1,23 @@
+import java.util.Scanner;
+public class Main {
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		int a = sc.nextInt();
+		int b = sc.nextInt();
+		int xn = sc.nextInt();
+		int k = sc.nextInt();
+		int m = sc.nextInt();
+
+		if (k == 1) System.out.println(xn);
+		for (int i=2; i<=k+4; i++) {
+			int x = rnd(a, b, xn, m);
+			if (i >= k) System.out.println(x);
+			xn = x;
+		}
+	}
+
+	private static int rnd(int a, int b, int x, int m) {
+		return (a * x + b) % m;
+	}
+
+}

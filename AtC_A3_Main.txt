@@ -1,0 +1,82 @@
+import java.util.*;
+public class Main {
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		final int N = sc.nextInt(), Q = sc.nextInt();
+
+		// Create server nodes
+		Node[] nodes = new Node[N+1];
+		for (int i=1; i<=N; i++) nodes[i] = new Node(i);
+
+		// Execute instructions
+		for (int i=0; i<Q; i++) {
+			final String S = sc.next();
+			final int A = sc.nextInt(), B = sc.nextInt(), TIME = sc.nextInt();
+			if ("make".equals(S)) {
+				make(nodes, A, B, TIME);
+			} else { // check
+				System.out.println(check(nodes, A, B, TIME));
+			}
+		}
+	}
+
+	private static void make(Node[] nodes, int s1, int s2, int time) {
+		nodes[s1].addEdge(nodes[s2], time);
+		nodes[s2].addEdge(nodes[s1], time); // two ways
+	}
+
+	private static String check(Node[] nodes, int s1, int s2, int time) {
+		// clear visited flag
+		for (int i=1; i<nodes.length; i++) {
+			nodes[i].hasVisited = false;
+		}
+
+		Queue<Node> s = new LinkedList<Node>();
+		s.offer(nodes[s1]);
+
+		while (!s.isEmpty()) {
+			Node n = s.poll();
+			if (n.server == s2) return "YES";
+
+			for (Edge edge : n.edges) {
+				Node edgeNode = edge.node;
+				if (edgeNode.hasVisited || edge.time < time) continue;
+				edgeNode.hasVisited = true;
+				s.offer(edgeNode);
+			}
+		}
+
+		return "NO";
+	}
+
+	private static class Node {
+		int server;
+		List<Edge> edges = new ArrayList<Edge>();
+		boolean hasVisited = false;
+
+		public Node(int server) {
+			this.server = server;
+		}
+
+		public void addEdge(Node node, int time) {
+			// store one edge per server (choose max time)
+			for (Edge edge : edges) {
+				if (edge.node.server == node.server) {
+					if (edge.time < time) edge.time = time;
+					return;
+				}
+			}
+			edges.add(new Edge(node, time)); // new server in the edge
+		}
+	}
+
+	private static class Edge {
+		Node node;
+		int time;
+		public Edge(Node node, int time) {
+			this.node = node;
+			this.time = time;
+		}
+	}
+
+}

@@ -1,0 +1,47 @@
+import java.util.*;
+public class Main {
+	private static int numOfPeople = 0, paths = 0;
+
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		final int N = sc.nextInt();
+
+		Node[] nodes = new Node[N+1];
+		for (int i=1; i<=N; i++) nodes[i] = new Node(i);
+
+		for (int i=1; i<=N; i++) {
+			final String S = sc.next();
+			for (int j=1; j<=N; j++) {
+				if (j != i && S.charAt(j-1) == 'Y') nodes[i].edges.add(nodes[j]);
+			}
+		}
+
+		walk(nodes, nodes[1], 1, "|");
+		System.out.println("Total num of people="+numOfPeople);
+		System.out.println("Num of paths="+paths);
+		System.out.println(numOfPeople / (double) paths);
+	}
+
+	private static void walk(Node[] nodes, Node n, int level, String history) {
+		boolean hasChild = false;
+		for (Node edge : n.edges) {
+			if (history.indexOf("|"+edge.student+"|") != -1) continue;
+			hasChild = true;
+			walk(nodes, edge, level+1, history+n.student+"|");
+		}
+
+		if (!hasChild) {
+			numOfPeople += level;
+			paths++;
+		}
+	}
+
+	private static class Node {
+		int student;
+		List<Node> edges = new ArrayList<Node>();
+
+		public Node(int student) {
+			this.student = student;
+		}
+	}
+}
