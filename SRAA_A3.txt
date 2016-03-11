@@ -1,0 +1,705 @@
+それでは３問目の解答例を公開します。
+ここで示すコードは実装例ですので、他のコーディング方法
+で解いたとしても問題ありません。
+
+データ構造を勉強したことのある人であれば、まず間違い
+なく配列を使ってListオブジェクトを実装したことがある
+と思います。もし、そうでなくてもインターネットで
+検索すれば実装コードや解説が山ほど出てきますので、
+そこからパフォーマンスの良さそうなコードを取ってきて、
+クラス名等を変更すれば出来上がりです。
+
+が、そこからが本題です。自作したコードのパフォーマンス
+を評価して、そこから更なる改善を求めて知恵を絞ったり、
+コードの細部にまで注意を払うことができるかがポイントに
+なります。
+
+しかしながら、Javaのコードも極限近くまで最適化している
+ので、これ以上のパフォーマンスを得るのは不可能なように
+思えるかもしれません。
+とはいえ、何か別のもの（例えばメモリ）を犠牲にするとか、
+利用シーンを限定する等、前提条件を加えることで改善が
+可能となることは珍しくありません。
+
+コードに入る前に、敵を知ることが重要です。まずは比較対象
+となるArrayListクラスのソースコードを熟読し、Javaが行っ
+ている高速化テクニックはすべて取り込むところから始める
+といいと思います。その後、どこで時間がかかっているのか、
+その制約をどうすれば解消できるのか、という観点で考えると、
+いい案が浮かぶかもしれません。
+
+JavaのArrayListは、要素データ格納用として内部に保持して
+いる配列を、毎回５０％ずつ拡張する戦略をとっています。
+しかし、その値はJavaのバージョンによって異なります。
+ここではJavaは初期要素数１０個から始め、５０％ずつ拡張
+するものと想定して解答例を書きました。
+
+10 => 15 => 22 => 33 => 49 => ...
+
+
+==============================
+テスト方法と環境
+==============================
+
+ここで示す改善率はマシン環境やテスト方法で異なります
+ので、これらの数値は参考値とお考えください。
+計測テストは以下の内容方法で計測しました。
+
+1) add opreration
+数字の 0 から 999,999 までを文字列としてリストに追加
+します。その操作を1000回繰り返すのにかかる時間を測り
+ます。
+
+2) get opreration
+あらかじめ、数字の 0 から 999,999 までを文字列として
+リストに追加しておきます（この操作は計測対象外）。
+0 番目から 999,999 番目までの要素を取得します。
+その操作を100回繰り返すのにかかる時間を測ります。
+
+（つまり、addは１０億回、getは１億回実行しました）
+
+上記 1), 2) をSolution3クラスを用いて実行した場合と
+ArrayListとの場合の二通りの実行時間を計測し、比較し
+ました。
+
+テストに用いたJDK、マシンのスペックは以下の通りです。
+
+JDK: Java SE 7 Update 45
+Laptop: HP ProBook 6460b
+OS: Windows 7 Enterprise, Service Pack 1
+Processor: Intel Core i7-2620M CPU @ 2.70GHz
+RAM: 16.0 GB
+System type: 64-bit Operating System
+
+なお、テストアプリを実行する際は、以下のようにJava
+コマンドの引数で、ヒープサイズを多めの値で固定する
+と比較的安定した計測結果が得られます。
+
+------------------------------
+$ java -Xmx1024m -Xms1024m Test
+------------------------------
+
+
+今回は解答例として、以下の６通りを用意しました。
+
+------------------------------
+解答例１）基本形［改善率：約５％］
+解答例２）拡張倍率を上げる［改善率：約２０％］
+解答例３）最大Capacityを確保［改善率：約６５％］
+解答例４）二次元配列［改善率：約５％以下］
+解答例５）プリミティブ型［改善率：約４０から５０％］
+解答例６）addAllの改善［改善率：約５０％］
+------------------------------
+
+また、今回のコードで工夫されているパフォーマンス
+チューニングのポイントを２点補足しておきます。
+
+------------------------------
+補足１）下限値チェックの省略
+補足２）エラーメッセージを他の関数で定義
+------------------------------
+
+
+まずはArrayListの基本形から紹介します。
+
+==============================
+解答例１）基本形［改善率：約５％］
+==============================
+
+ArrayListと同じ戦略で、配列を５０％ずつ拡張させます。
+add, get処理を行うためのコードと、データの妥当性
+チェックを加えた最小限（？）のコードを以下に示します。
+（詳細な解説はネットのいたるところで書かれているので、
+ここでは省略します）
+
+------------------------------
+class Solution3<E> implements MyList<E> {
+  private static final int MAX = 1000000;
+  private static final String CAPACITY_EXCEEDED_MSG = "Exceeded capacity limit: "+MAX;
+  private Object[] elements;
+  private int size = 0;
+
+  public Solution3() {
+    elements = new Object[10];
+  }
+
+  @SuppressWarnings("unchecked")
+  public E get(int index) {
+    if (index >= size) {
+      throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+    }
+    return (E) elements[index];
+  }
+
+  public void add(E element) {
+    if (size >= MAX) throw new RuntimeException(CAPACITY_EXCEEDED_MSG);
+    if (size == elements.length) resize();
+    elements[size++] = element;
+  }
+
+  private void resize() {
+    Object[] copy = new Object[Math.min(size + (size >> 1), MAX)];
+    for (int i=0; i<size; i++) {
+      copy[i] = elements[i];
+    }
+    elements = copy;
+
+    //Object[] copy = new Object[Math.min(size + (size >> 1), MAX)];
+    //System.arraycopy(elements, 0, copy, 0, size);
+    //elements = copy;
+
+    //elements = java.util.Arrays.copyOf(elements, Math.min(size + (size >> 1), MAX));
+  }
+
+  private String outOfBoundsMsg(int index) {
+    return "Index: "+index+", Size: "+size;
+  }
+}
+------------------------------
+
+問題なく実装できており、正しく動作します。
+しかし、これでは実行時間でArrayListに勝てません。
+get関数はArrayListのgetと同等の性能ですが、
+add関数が約２０％遅くなります。
+
+その原因は、resize関数で新配列を生成後、要素を
+forループで一つひとつコピーしている点にあります。
+
+配列間のコピーは System.arraycopy を利用することで
+高速化できます。それを用いると、この解答例の
+resize関数を以下のように変更できます。
+
+------------------------------
+  private void resize() {
+    Object[] copy = new Object[Math.min(size + (size >> 1), MAX)];
+    System.arraycopy(elements, 0, copy, 0, size);
+    elements = copy;
+  }
+------------------------------
+
+これで add関数がArrayListのものより約５％高速になります。
+
+その他に、java.util.Arraysクラスの copyOf を利用しても
+高速なコピーが可能です。JavaのArrayListは、この copyOf
+を利用しています。
+
+------------------------------
+  private void resize() {
+    elements = Arrays.copyOf(elements, Math.min(size + (size >> 1), MAX));
+  }
+------------------------------
+
+こちらは add関数で約２％の高速化が得られます。
+ちなみに、copyOfも内部では System.arraycopy を利用して
+コピーしていますので、System.arraycopyを直接利用した方
+が若干速いみたいです。しかし、（未確認な情報ですが）
+これはテストデータによって変化する可能性があるよう
+です。
+
+以降は、ここから更なる高速化を目指して考察します。
+
+
+==============================
+解答例２）拡張倍率を上げる［改善率：約２０％］
+==============================
+
+Listオブジェクトは要素データを内部に設けた配列に保持
+しています。ただ、メモリ効率を考慮して、最初は要素数
+１０個で生成しておいて、１０個を超える追加要求が来た
+タイミングで、配列のサイズを拡張します。
+その際、古い配列から新しい配列へ要素データをコピーし
+なければなりません。その作業がボトルネックとなり、配列
+を直接使う場合と比べ、遅くなります。
+そこで、パフォーマンスを上げるには、いかに配列の拡張
+回数を減らすかがポイントになります。
+
+ここでは更に速くするため、拡張回数を減らす工夫を考え
+ます。ArrayListは毎回５０％ずつ増やすので、ここでは
+１００％増、つまり、２倍ずつ拡張するように修正して
+みます。具体的には、
+
+Object[] copy = new Object[Math.min(size + (size >> 1), MAX)];
+
+を
+
+Object[] copy = new Object[Math.min(size << 1, MAX)];
+
+に変更します。以下が変更後のコードです。
+
+------------------------------
+class Solution3<E> implements MyList<E> {
+  private static final int MAX = 1000000;
+  private static final String CAPACITY_EXCEEDED_MSG = "Exceeded capacity limit: "+MAX;
+  private Object[] elements;
+  private int size = 0;
+
+  public Solution3() {
+    elements = new Object[10];
+  }
+
+  @SuppressWarnings("unchecked")
+  public E get(int index) {
+    if (index >= size) {
+      throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+    }
+    return (E) elements[index];
+  }
+
+  public void add(E element) {
+    if (size >= MAX) throw new RuntimeException(CAPACITY_EXCEEDED_MSG);
+    if (size == elements.length) resize();
+    elements[size++] = element;
+  }
+
+  private void resize() {
+    Object[] copy = new Object[Math.min(size << 1, MAX)];
+    System.arraycopy(elements, 0, copy, 0, size);
+    elements = copy;
+  }
+
+  private String outOfBoundsMsg(int index) {
+    return "Index: "+index+", Size: "+size;
+  }
+}
+------------------------------
+
+これで add関数が約２０％速くなります。
+
+
+==============================
+解答例３）最大Capacityを確保［改善率：約６５％］
+==============================
+
+配列の拡張回数を減らすのではなく、そもそもコピーする
+必要をなくせば大幅な高速化が実現できるはずです。
+その最も簡単な実現方法は、最初から配列要素を最大個数
+用意しておくことです。問題文中にもメモリ効率を考処
+せよ、という要件はありませんので問題なさそうです。
+以下にその実装コードを示します。
+
+------------------------------
+class Solution3<E> implements MyList<E>{
+  private static final int MAX = 1000000;
+  private static final String CAPACITY_EXCEEDED_MSG = "Exceeded capacity limit: "+MAX;
+  private Object[] elements;
+  private int size = 0;
+
+  public Solution3() {
+    elements = new Object[MAX];
+  }
+
+  @SuppressWarnings("unchecked")
+  public E get(int index) {
+    if (index >= size) {
+      throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+    }
+    return (E) elements[index];
+  }
+
+  public void add(E element) {
+    if (size >= MAX) throw new RuntimeException(CAPACITY_EXCEEDED_MSG);
+    elements[size++] = element;
+  }
+
+  private String outOfBoundsMsg(int index) {
+    return "Index: "+index+", Size: "+size;
+  }
+}
+------------------------------
+
+本問題では問題文中で「Listに格納される最大要素数が
+1,000,000」と定義されているので、このオブジェクトが
+生成される時点、つまり、コンストラクタ内で一気に
+1,000,000個の要素を確保すれば add 関数で配列 elements
+を拡張する必要がなくなり、高速化が実現できます。
+
+しかし、このアプローチはJavaのArrayListでもコンストラクタ
+で initialCapacity を指定することで同様な高速化が
+行えます。
+
+List<String> list = new ArrayList<String>(1000000);
+
+しかしながら、それでも本解答例ほどのパフォーマンス
+は得られません。この条件下で測定しても本解答例の
+add関数の方が約６５％速い、という結果となりました。
+
+ArrayListのadd関数では追加前に内部配列の大きさを確認
+するため、「ensureCapacityInternal(size + 1)」を
+コールしています。それをたどると、、、
+
+----------------------------------
+private void ensureCapacityInternal(int minCapacity) {
+    if (elementData == EMPTY_ELEMENTDATA) {
+        minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
+    }
+    ensureExplicitCapacity(minCapacity);
+}
+
+private void ensureExplicitCapacity(int minCapacity) {
+    if (minCapacity - elementData.length > 0)
+         grow(minCapacity);
+}
+
+private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+private void grow(int minCapacity) {
+    // overflow-conscious code
+    int oldCapacity = elementData.length;
+    int newCapacity = oldCapacity + (oldCapacity >> 1);
+    if (newCapacity - minCapacity < 0)
+        newCapacity = minCapacity;
+    if (newCapacity - MAX_ARRAY_SIZE > 0)
+        newCapacity = hugeCapacity(minCapacity);
+    // minCapacity is usually close to size, so this is a win:
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+----------------------------------
+
+上記のようにいくつもの演算と条件判断などが実行される
+ため、本解答例よりも遅くなります。
+もちろん、本解答例の方法だとCapacityに近いデータを格納
+する場合はいいですが、そうでない場合はメモリの無駄遣い
+が激しすぎます。
+そこで、initialCapacityでMAXに近い値が指定されれば、
+MAX確保して、add時には「ensureCapacityInternal(size + 1)」
+をスキップし、そうでない場合は通常のロジックを利用する、
+と切り替えながら使うのが実用的かもしれません。
+今回の問題では、そこまで実装しなくても正解とします。
+
+
+==============================
+解答例４）二次元配列［改善率：約５％以下］
+==============================
+
+速度面では解答例３が最も効果的なのですが、メモリ使用量
+的に不経済で実用的ではありません。
+そこで、ここでは二次元配列の利用を考えてみます。
+
+例えば、まず、elements[0]に1,000個の領域を確保します。
+それが一杯になったら、elements[1]に1,000個の領域を
+確保します。これで、elements[0]に格納されている値を
+コピーすることなく、新たな値を拡張領域に格納してい
+けます。以下がそのコードです。
+
+------------------------------
+class Solution3<E> implements MyList<E> {
+  private static final int MAX = 1000000;
+  private static final String CAPACITY_EXCEEDED_MSG = "Exceeded capacity limit: "+MAX;
+  private Object[][] elements;
+  private int size = 0;
+
+  public Solution3() {
+    elements = new Object[1000][];
+  }
+
+  @SuppressWarnings("unchecked")
+  public E get(int index) {
+    if (index >= size) {
+      throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+    }
+    return (E) elements[index / 1000][index % 1000];
+  }
+
+  public void add(E element) {
+    if (size >= MAX) throw new RuntimeException(CAPACITY_EXCEEDED_MSG);
+    int mod = size % 1000;
+    if (mod == 0) resize();
+    elements[size / 1000][mod] = element;
+    size++;
+  }
+
+  private void resize() {
+    elements[size / 1000] = new Object[1000];
+  }
+
+  private String outOfBoundsMsg(int index) {
+    return "Index: "+index+", Size: "+size;
+  }
+}
+------------------------------
+
+この方法で、add関数は約１０％の高速化が得られますが、
+get関数は逆に遅くなり、add関数で速くなった効果を半減
+する程度の時間を浪費します。そのため、add, getの総合
+で計測すると、ArrayListよりも約５％の性能改善にしか
+なりません。
+しかも、通常は、addよりも getの方が頻繁に呼び出され
+ることが多いと思います。そのため、実質的には性能劣化
+とも言えます。
+更に、二次元の配列を持つため、メモリ効率の点でも劣り
+ます。
+
+とはいえ、発想としては面白いので、この類のアプローチ
+でもおまけして正解とします。
+
+
+==============================
+解答例５）プリミティブ型［改善率：約４０から５０％］
+==============================
+
+これまでは与えられた MyList インターフェースを変更する
+ことなく実装しましたが、今回はその前提を変えての実装
+になります。
+Javaのコレクションクラスは汎用性を優先してオブジェクト
+の格納のみを対象とし、Primitive Type、例えば int, long,
+double等は、Integer, Long, Double等のラッパークラスに
+格納してからコレクションに追加しなければなりません。
+あらかじめ扱うデータが例えば、int のみの場合でも、
+（内部的には）わざわざ Integerオブジェクトを生成して
+追加し、取得後に intに変換（正確には Integerオブジェクト
+から int値を取得）しなければなりません。
+そこで、直接 int 型のまま格納できればオーバーヘッドが
+減り、速くなるはずです。そのためにはまず、インターフェース
+で定義されたオペレーションのデータ型を以下のように
+変更する必要があります。
+
+interface MyIntList {
+    void add(int element);
+    int get(int index);
+}
+
+このインターフェースを実装したコードを以下に示します。
+
+------------------------------
+class Solution3 implements MyIntList {
+  private static final int MAX = 1000000;
+  private static final String CAPACITY_EXCEEDED_MSG = "Exceeded capacity limit: "+MAX;
+  private int[] elements;
+  private int size = 0;
+
+  public Solution3() {
+    elements = new int[10];
+  }
+
+  public int get(int index) {
+    if (index >= size) {
+      throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+    }
+    return elements[index];
+  }
+
+  public void add(int element) {
+    if (size >= MAX) throw new RuntimeException(CAPACITY_EXCEEDED_MSG);
+    if (size == elements.length) resize();
+    elements[size++] = element;
+  }
+
+  private void resize() {
+    int[] copy = new int[Math.min(size + (size >> 1), MAX)];
+    System.arraycopy(elements, 0, copy, 0, size);
+    elements = copy;
+  }
+
+  private String outOfBoundsMsg(int index) {
+    return "Index: "+index+", Size: "+size;
+  }
+}
+------------------------------
+
+これで add関数を約４０から５０％高速にできます。
+ただ、この方法だとプリミティブ型ごとに専用のリスト
+クラス（MyLongList, MyDoubleList, ...）を作る必要が
+あります。また、格納する全てのデータの型が同じでなけ
+れば利用できません。
+しかしながら、テラ単位の大量データを扱う世界では、
+この差は大きな意味があり、実際にそうしたクラスを実装
+したライブラリが提供され利用されています。
+ということで、この方法が最も実用的で効果的な解法と
+言えるかもしれません。
+
+
+==============================
+解答例６）addAllの改善［改善率：約５０％］
+==============================
+
+もう一つ実用的な例を紹介します。
+今回の問題文からは発想しにくいかもしれませんが、
+もし、与えられるデータが既に配列に格納されていたと
+しましょう。その場合でも、今のMyListインターフェース
+では forループで値を一つずつ追加しなければいけません。
+
+------------------------------
+MyList<String> list = new Solution3<String>();
+for (String s : data) {
+    list.add(s);
+}
+------------------------------
+
+せっかく元データが配列に格納されているのに、
+それをバラバラに扱うのはもったいないですね。
+解答例１でも説明したとおり、配列から配列にコピーする
+場合は、System.arraycopy を利用すると高速化できます。
+
+そこで、配列同士でコピーできるように、新たな
+オペレーション addAll をMyListに追加しましょう。
+
+------------------------------
+interface MyList<E> {
+    void add(E element);
+    E get(int index);
+
+    // Added for Answer6
+    void addAll(E[] elements);
+    void addAll(MyList<E> list);
+    E[] getElements();
+}
+------------------------------
+
+addAll(E[] elements); は配列に格納された全データを
+リストの最後尾に追加します。
+
+addAll(MyList<E> list); はMyListオブジェクトに格納
+された全データをリストの最後尾に追加します。
+
+E[] getElements(); は配列同士でのコピーを可能にする
+ために、リスト内の配列を（コピーでなく）そのまま返却
+します（汎用ライブラリの仕様としては好ましくありま
+せんが、特定のアプリでのみ使用するという前提であれば
+問題にならない場合もあると想定しましょう）。
+
+このような addAll関数は ArrayList でも既に実装済み
+ですが、引数にCollectionを指定するようになっています。
+
+boolean  addAll(Collection<? extends E> c);
+
+そのため、まず、Collectionから配列にコピーした後、
+その配列をListオブジェクト内の配列にコピーしなければ
+なりません。つまり、同じコピー処理が２回行われています。
+そこで、そのコピーを１回で済ますことができれば
+パフォーマンスを改善できるはずです。
+このアイデアを実装したコードを以下に示します。
+（ArrayListでは addAll の他にコンストラクタでも
+Collectionデータを渡すことができますが、ここでは
+その実装は省略しました）
+
+------------------------------
+class Solution3<E> implements MyList<E> {
+  private static final int MAX = 1000000;
+  private static final String CAPACITY_EXCEEDED_MSG = "Exceeded capacity limit: "+MAX;
+  private Object[] elements;
+  private int size = 0;
+
+  public Solution3() {
+    elements = new Object[10];
+  }
+
+  @SuppressWarnings("unchecked")
+  public E get(int index) {
+    if (index >= size) {
+      throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+    }
+    return (E) elements[index];
+  }
+
+  public void add(E element) {
+    if (size >= MAX) throw new RuntimeException(CAPACITY_EXCEEDED_MSG);
+    if (size == elements.length) ensureCapacity(1);
+    elements[size++] = element;
+  }
+
+  public void addAll(E[] elementData) {
+    int length = elementData.length, newSize = size + length;
+    if (newSize > MAX) throw new RuntimeException(CAPACITY_EXCEEDED_MSG);
+    if (newSize > elements.length) ensureCapacity(length);
+    System.arraycopy(elementData, 0, elements, size, length);
+    size += length;
+  }
+
+  public void addAll(MyList<E> list) {
+    addAll(list.getElements());
+  }
+
+  @SuppressWarnings("unchecked")
+  public E[] getElements() {
+    return (E[]) elements;
+  }
+
+  private void ensureCapacity(int minAdditions) {
+    int minCapacity = Math.min(size + Math.max(size >> 1, minAdditions), MAX);
+    if (minCapacity > size) {
+      Object[] copy = new Object[minCapacity];
+      System.arraycopy(elements, 0, copy, 0, size);
+      elements = copy;
+    }
+  }
+
+  private String outOfBoundsMsg(int index) {
+    return "Index: "+index+", Size: "+size;
+  }
+}
+------------------------------
+
+これで、ArrayListの addAllに比べ、約５０％も高速に
+なります。しかし、データが配列や本リストオブジェクト
+に格納済みでなければ利用できないため、使える場面が
+かなり限定されます。
+とはいえ、カスタムリストクラスに追加して差し支えない
+くらい有効な改善案だと思います。
+
+
+==============================
+補足１）下限値チェックの省略
+==============================
+
+今回、例として示したコードの中で工夫されている
+パフォーマンスチューニングのポイントを２点、
+解説します。
+（これらはJavaのArrayListで実装されていました）
+
+解答例の get関数内の先頭で index値の妥当性を
+チェックしていますが、下限値チェックが抜けています。
+
+------------------------------
+if (index >= size) {
+------------------------------
+
+index値は、0オリジンの内部配列の添え字として使われ
+ますので、0 <= index < size の範囲でなければ不正です。
+そこで、以下のようにコードしたくなると思います。
+
+------------------------------
+if (index < 0 || index >= size) {
+------------------------------
+
+内部配列 elements は size よりも多めに確保されている
+ため、ここでの上限値チェックは必須です。
+（チェックしないと size以上の値でアクセスしてもエラー
+にならないことがあります）
+しかし、下限値チェック index < 0 は必ずしも必要では
+ありません。例えば、index = -1 の時、elements[index]
+でアクセスしたところで ArrayIndexOutOfBoundsException
+がスローされるため、正しくエラー処理が行えます。
+本来なら下限値チェックを行い、上限値エラーと同じ
+IndexOutOfBoundsException をスローすべきですが、
+それよりも「index < 0」の演算にかかるコストを削減する
+という、よりパフォーマンス重視の選択を行っています。
+
+
+==============================
+補足２）エラーメッセージを他の関数で定義
+==============================
+
+get関数内でExceptionをスローする際、エラーメッセージ
+をわざわざ別関数 outOfBoundsMsg で生成しているのには
+理由があります。
+
+------------------------------
+throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+------------------------------
+
+ここではエラーメッセージを再利用する必要がないので
+通常は下記のように書き換えたくなると思います。
+
+------------------------------
+throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size);
+------------------------------
+
+しかし、これだと get関数が１億回実行して 200ミリ秒
+程度遅くなります。
+原因はまだ分かりませんが、色々なパターンでテストして
+みたところ、どうもパラメータ変数やインスタンス変数
+と文字列を結合した場合に遅くなるようです。
+例えば index（パラメータ変数）と size（インスタンス変数）
+をローカル変数に置き換えるとパフォーマンスは劣化しま
+せんでした。
+
+以上です。

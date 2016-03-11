@@ -1,0 +1,45 @@
+いよいよ最後の問題です（３問目）。
+言語はJavaで、制限時間は特にありません。
+
+今回も問題の意味が読み取りづらい表現とかありましたら、
+指摘してもらえると助かります。
+
+よろしくお願いします。
+
+------------------------------
+
+[Question 3]
+
+Write your own ArrayList class:
+
+class Solution3<E> implements MyList<E> {
+    public void add(E element);
+    public E get(int index);
+}
+
+that implements the following interface:
+
+interface MyList<E> {
+    void add(E element);
+    E get(int index);
+}
+
+The 'add' method appends the specified element to
+the end of this list, and the 'get' method returns
+the element at the specified position in this list.
+
+Notice that you can change the interface, if necessary.
+For example, add new operations, change data types.
+
+Also answer how much faster, compared to ArrayList
+class in Java, for each operation. For example,
+'add' operation in your solution is about 20 percent
+faster as compared to the one in ArrayList class.
+'get' operation in your solution is as fast as the
+one in ArrayList class.
+Assume that:
+
+The maximum number of elements that the list can
+contain is 1,000,000.
+
+------------------------------

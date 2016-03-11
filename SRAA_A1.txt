@@ -1,0 +1,606 @@
+それでは２問目の解答例を公開します。
+ここで示すコードは実装例ですので、他のコーディング方法
+で解いたとしても問題ありません。
+また、例外処理はコードの簡素化を優先して、すべて
+Exceptionで受け取り、無視しています。
+
+本テストは知っているか、知らないかで運命が分かれる類の
+問題で、やったことがない人には難しいかもしれません。
+しかも、最近はSpring Framework等にオブジェクト生成を
+任せることが多いので、自前でこのようなコードをする機会
+が少ないですよね。もし、Springを利用して解答した人が
+いたとしても、とりあえず正解にしようと思いますが、
+ここでの解答例ではJava SEが提供するライブラリで可能な
+方法のみで考えます。
+
+
+今回は解答例として、以下の７通りを用意しました。
+
+解答例１）呼び出し専用メソッド
+解答例２）Reflection
+解答例３）Annotation
+解答例４）Annotation＋オブジェクトキャッシュ
+解答例５）Interface
+解答例６）Lambda
+解答例７）ResourceBundle
+解答例８）ScriptEngine
+
+また、好ましくないけど、こんな方法もなくはない、
+という意味で以下の２通りも追加しておきました。
+
+解答例９）文字列長
+解答例１０）親子関係
+
+
+正解に入る前に、まずは正しく処理を分離できていない例
+からみてみましょう。
+
+==============================
+解答例０）悪い例
+==============================
+
+------------------------------
+class Solution {
+  public int solution(String S, int W, int H) {
+    if ("Rectangle".equals(S)) return calcRectangle(W, H);
+    if ("Triangle".equals(S))  return calcTriangle(W, H);
+    return -1;
+  }
+
+  int calcRectangle(int W, int H) { return W * H; }
+
+  int calcTriangle(int W, int H) { return W * H / 2; }
+}
+------------------------------
+
+面積を求める公式は別関数に定義されていますが、Formula を追加
+する際には、新たな if文を solution関数内に追記することになり
+ます。そのため、問題の要件を満たしていません。
+
+この問題では、solution関数はその他のロジックも書き込まれる場所
+と想定しています。そのため、上記 if文は他のコードに埋もれて
+しまい、メンテナンス時において、どこを修正していいか分かりにく
+くなることが危惧されます。
+
+
+==============================
+解答例１）呼び出し専用メソッド
+==============================
+
+そこで、変更が発生する箇所を solution関数の外に出して
+みましょう。
+
+------------------------------
+class Solution {
+  public int solution(String S, int W, int H) {
+    return calculate(S, W, H);
+  }
+
+  int calculate(String S, int W, int H) {
+    if ("Rectangle".equals(S)) return calcRectangle(W, H);
+    if ("Triangle".equals(S))  return calcTriangle(W, H);
+    return -1;
+  }
+
+  int calcRectangle(int W, int H) {
+    return W * H;
+  }
+
+  int calcTriangle(int W, int H) {
+    return W * H / 2;
+  }
+}
+------------------------------
+
+新たに calculate という関数を作成し、そこで図形名から面積
+計算関数を呼び出すことで、その他のコードが書き足されるで
+あろう solution関数に手を加える必要がなくなります。
+新たな Area Formula を追加する際も、calculate関数から
+calcTriangle関数の範囲のみでの変更に制限できます。
+
+
+==============================
+解答例２）Reflection
+==============================
+
+次に、もう一歩進めて、calculate関数なしで、S の値から直接
+Area Formula を呼び出せたら、更に変更量が減りますよね。
+しかし、そのためには、S から calcRectangle や calcTriangle
+といった関数オブジェクトを動的に取得する必要があります。
+それを可能にするが、Classクラスの getMethod関数です。
+
+Method getMethod(String name,　Class<?>... parameterTypes);
+
+これを利用したコードは以下のようになります。
+
+------------------------------
+import java.lang.reflect.Method;
+class Solution {
+  public int solution(String S, int W, int H) {
+    try {
+      Method m = Solution.class.getMethod(
+                 "calc"+S, Integer.TYPE, Integer.TYPE);
+      return ((Integer) m.invoke(this, H, W)).intValue();
+    } catch (Exception ex) {}
+    return -1;
+  }
+
+  public int calcRectangle(int W, int H) { return W * H; }
+
+  public int calcTriangle(int W, int H) { return W * H / 2; }
+}
+------------------------------
+
+これで、例えばOvalを追加することになっても、calcOval関数を
+書き足すだけでよくなり、呼び出し部分への変更は不要となりま
+した。
+
+
+==============================
+解答例３）Annotation
+==============================
+
+先の解答例ではメソッド名を「"cals" + S」にしなければならない、
+という暗黙のルールが存在します。
+それだと、別の開発者には難解なコードになってしまいます。
+そこで、ここでは Annotation を付与することで、明示的に
+Area Formula の関数であることを定義しましょう。
+例えば、Rectangleの面積を求める関数には以下の Annotation
+を付けます。
+
+@AreaFormula("Rectangle")
+
+引数に solution関数のパラメータ S を記述することで、
+Sと関数を関連付けています。実装コードは以下の通りです。
+
+------------------------------
+import java.lang.annotation.*;
+import java.lang.reflect.Method;
+class Solution {
+  public int solution(String S, int W, int H) {
+    for (Method m : Solution.class.getDeclaredMethods()) {
+      AreaFormula af = m.getAnnotation(AreaFormula.class);
+      if (af != null && af.value().equals(S)) {
+        try {
+          return ((Integer) m.invoke(this, H, W)).intValue();
+        } catch (Exception ex) {}
+      }
+    }
+    return -1;
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  @interface AreaFormula { String value(); }
+
+  @AreaFormula("Rectangle")
+  int rectangle(int W, int H) { return W * H; }
+
+  @AreaFormula("Triangle")
+  int triangle(int W, int H) { return W * H / 2; }
+}
+------------------------------
+
+これで Area Formula の関数名（rectangle, triangle）は何を指定
+してもよくなりますし、Annotation名を見ただけで、それが面積を
+求める関数であることが分かるようになりました。
+
+
+==============================
+解答例４）Annotation＋オブジェクトキャッシュ
+==============================
+
+先の解答例では solution関数内で毎回、methodオブジェクトを
+取得していますが、今回の問題では、最初に一度行えば十分で、
+二回目以降も同じオブジェクトを使いまわして問題ありません。
+
+この程度のソース規模なら問題ありませんが、実用となると、
+起動対象となるメソッドが大量となったり、複数クラスに分けて
+定義する場合が多いと思います。そうなると逐次に検索するのは
+コストのかかる処理となります。
+
+そこで、ここでは全ての Area Formula 関数のオブジェクトを
+Mapに格納（キャッシュ）し、再利用することを考えます。
+実装コードは以下のようになります。
+
+------------------------------
+import java.lang.annotation.*;
+import java.lang.reflect.Method;
+import java.util.*;
+class Solution {
+  private static Map<String,Method> beans = new HashMap<String,Method>();
+  static {
+    for (Method m : Solution.class.getDeclaredMethods()) {
+      AreaFormula af = m.getAnnotation(AreaFormula.class);
+      if (af != null) beans.put(af.value(), m);
+    }
+  }
+
+  public int solution(String S, int W, int H) {
+    Method m = beans.get(S);
+    if (m != null) {
+      try {
+        return ((Integer) m.invoke(this, H, W)).intValue();
+      } catch (Exception ex) {}
+    }
+    return -1;
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.METHOD)
+  @interface AreaFormula { String value(); }
+
+  @AreaFormula("Rectangle")
+  int rectangle(int W, int H) { return W * H; }
+
+  @AreaFormula("Triangle")
+  int triangle(int W, int H) { return W * H / 2; }
+}
+------------------------------
+
+Solutionクラスがロードされた時点ですべての Area Formula関数
+を検索し、そのオブジェクトをMapに格納します。そして、
+solution関数内では、そのMapから Area Formula関数を取得します。
+図形名 S からダイレクトに Methodオブジェクトの取得する点で
+パフォーマンスの改善が期待できます。
+
+
+==============================
+解答例５）Interface
+==============================
+
+Area Formula を関数ではなく、個別のクラス内に実装する方法も
+あります。共通のインターフェースを定義して面積の計算関数を
+呼び出します。
+ここでは、四角形の面積を求めるクラスとして Rectangle および、
+三角形用の Triangleクラスを作ります。また、面積計算を実行する
+メソッドを明示的に定義するため、以下の interface を定義します。
+
+interface AreaFormula { int calculate(int W, int H); }
+
+Rectangle、Triangle ともに上記インターフェースを実装し、
+図形に応じた面積を求める式を calculate 内に記述します。
+実装コードは以下のようになります。
+
+------------------------------
+class Solution {
+  public int solution(String S, int W, int H) {
+    try {
+      AreaFormula af = Class.forName(S)
+                      .asSubclass(AreaFormula.class)
+                      .newInstance();
+      return af.calculate(W, H);
+    } catch (Exception ex) {}
+    return -1;
+  }
+}
+
+interface AreaFormula { int calculate(int W, int H); }
+
+class Rectangle implements AreaFormula {
+  public int calculate(int W, int H) { return W * H; }
+}
+
+class Triangle implements AreaFormula {
+  public int calculate(int W, int H) { return W * H / 2; }
+}
+------------------------------
+
+今回の問題のようにロジックが単純な場合は、Annotationの
+解答例のような関数のスタイルでも読みやすいですが、
+各図形のロジックが複雑で、いくつもの関数を定義したりする
+場合は、この方法がメンテしやすいともあります。
+また、AreaFormulaを抽象クラスにし、図形で共通した処理
+をそこに定義することも可能になります。
+
+ただし、図形名 S からクラスを取得するのはコストの
+かかる処理なので、パフォーマンスが求められる場面では
+クラスオブジェクトをMapにキャッシュしておくという
+手法をよく用います。
+
+なお、ここでは interface を用いましたが、Annotationでも
+関数でなく、クラスにAnnotationを付与することで同等の実装
+が可能だと思います。
+
+また、Annotation＋オブジェクトキャッシュの解答例を
+同じ方法で、クラスではなくオブジェクトをMapにキャッシュ
+するということも可能です。その実装例を以下に示します。
+
+------------------------------
+import java.util.*;
+class Solution {
+  private static Map<String,AreaFormula> beans =
+         new HashMap<String,AreaFormula>();
+  static {
+    beans.put("Rectangle", new Rectangle());
+    beans.put("Triangle",  new Triangle());
+  }
+
+  public int solution(String S, int W, int H) {
+    AreaFormula af = beans.get(S);
+    return af != null ? af.calculate(W, H) : -1;
+  }
+}
+
+interface AreaFormula { int calculate(int W, int H); }
+
+class Rectangle implements AreaFormula {
+  public int calculate(int W, int H) { return W * H; }
+}
+
+class Triangle implements AreaFormula {
+  public int calculate(int W, int H) { return W * H / 2; }
+}
+------------------------------
+
+ただし、これには一つ落とし穴があります。
+図形オブジェクトは毎回の処理に対し、同一のインスタンス
+を利用するため、RectangleやTriangleのインスタンス変数
+がクラス変数のように共有されてしまい、思わぬバグの原因
+となります。（初回の処理でセットした値が、初期化されな
+いで２回目も保持される）
+図形オブジェクトの作成者に、この制約を周知徹底できる
+場面でのみ、利用することをお勧めします。
+
+
+==============================
+解答例６）Lambda
+==============================
+
+Java SE 8 以降であれば、Lambda式を利用することも可能
+です。実装コードは以下のようになります。
+
+------------------------------
+import java.util.*;
+class Solution {
+  private static Map<String,AreaFormula> beans =
+          new HashMap<String,AreaFormula>();
+  static {
+    beans.put("Rectangle", (W, H) -> W * H);
+    beans.put("Triangle",  (W, H) -> W * H / 2);
+  }
+
+  public int solution(String S, int W, int H) {
+    AreaFormula af = beans.get(S);
+    return af != null ? af.calculate(W, H) : -1;
+  }
+}
+
+@FunctionalInterface
+interface AreaFormula {
+  int calculate(int W, int H);
+}
+------------------------------
+
+
+==============================
+解答例７）ResourceBundle
+==============================
+
+変更部分を properties ファイルに記述することで、Javaのコード
+への変更を不要にする、という方法は多くの場面で使われている
+と思います。
+ここでも、そのテクニックが使えないか考えてみましょう。
+
+まず変更部分となる図形ごとの公式を properties ファイルに格納
+することを考えます。しかし、公式をそのまま記述すると、
+JavaCC等の Parser generator で公式をパースする parserを生成
+する必要が出て、ちょっと面倒ですよね。
+そこで、ここでは公式の特徴を利用して、parser を使わなくても
+計算できる方法を探ってみます。
+
+今後も追加される可能性のある図形も含めた公式を以下に並べて
+みます。
+
+Rectangle: W * H
+Triangle : W * H / 2
+Oval     : W * H * 3.14 / 4
+Rhombus  : W * H / 2
+
+すると、すべてに W * H が含まれることが分かります。
+しかし、まだ割り算、掛け算が混在して、解析が面倒そうです
+が、よく見ると、どれも掛け算に書き直すことができます。
+
+Rectangle: W * H * 1
+Triangle : W * H * 0.5
+Oval     : W * H * 0.785
+Rhombus  : W * H * 0.5
+
+つまり、properties ファイルに格納すべき最小限の情報という
+意味では、各図形とも最後の数字、1, 0.5, 0.785, 0.5、のみで
+十分です。
+その数字を読み込めれば、あとは W * H * number で面積が求め
+られます。この考えをコードにすると、以下のようになります。
+
+------------------------------
+import java.util.ResourceBundle;
+class Solution {
+  public int solution(String S, int W, int H) {
+    ResourceBundle bundle = ResourceBundle.getBundle("areaFormula");
+    if (S != null && bundle.containsKey(S)) {
+      return (int) (W * H * Double.parseDouble(bundle.getString(S)));
+    }
+    return -1;
+  }
+}
+------------------------------
+
+そして、areaFormula.properties ファイルに以下の内容を
+記述します。
+
+------------------------------
+Rectangle=1
+Triangle=0.5
+------------------------------
+
+例えば、Ovalを追加したい場合は、「Oval=0.785」という１行を
+properties ファイルに追加するだけで対応できます。
+
+ただ、面積が W * H * number で計算可能な限りは対応できます
+が、複雑なロジックには不向きですよね。そのため、本問題の
+解答としては好ましい例ではありませんが、変更の分離手段
+としては悪くないと思います。
+また、変更量という観点だけでみると、他の方法よりも優れて
+いるとも言えるので、この類のアプローチでも正解とします。
+
+
+==============================
+解答例８）ScriptEngine
+==============================
+
+Java SE 6 以降が利用可能であれば、ScriptEngine を使って
+ResourceBundle の解答例の問題点を改善できます。
+properties ファイルにスクリプトとして公式を記述すれば
+ScriptEngineが解析し、計算を実行してくれますので、
+自前でパースする必要がありません。
+以下がその実装例です。
+
+------------------------------
+import java.util.ResourceBundle;
+import javax.script.*;
+class Solution {
+  public int solution(String S, int W, int H) {
+    ResourceBundle bundle = ResourceBundle.getBundle("areaFormula");
+    ScriptEngineManager manager = new ScriptEngineManager();
+    ScriptEngine engine = manager.getEngineByName("js");
+
+    if (S != null && bundle.containsKey(S)) {
+      Bindings bindings = engine.createBindings();
+      bindings.put("W", W);
+      bindings.put("H", H);
+      try {
+        return (int) ((Double) engine.eval(
+               bundle.getString(S), bindings)).doubleValue();
+      } catch (ScriptException ex) {}
+    }
+    return -1;
+  }
+}
+------------------------------
+
+そして、properties ファイルの中身は以下のようになります。
+
+------------------------------
+Rectangle=W * H;
+Triangle=W * H / 2;
+------------------------------
+
+properties ファイルから取得した図形面積の公式と、
+バインディング変数として、W と H をエンジンに
+渡します。
+すると答えが Double 型で返却されるので、intに
+キャストして返します。
+これで、色々な公式に対応可能な柔軟なコードになり
+ました。
+
+
+これ以降は、番外編です。とりあえず要件は満たしているが
+実用性は極めて低いやり方です。
+
+
+==============================
+解答例９）文字列長
+==============================
+
+これはかなり卑怯な方法ですが、こんな方法もあります、という
+意味で紹介しておきます。
+
+まず、今後も追加される可能性のある図形も含めた図形名の
+長さを調べてみます。
+
+Rectangle: 9
+Triangle : 8
+Oval     : 4
+Rhombus  : 7
+
+すべて異なりますね。そこで、S の文字列長で Area Formula関数
+の呼び出しを分岐することも（当面は）可能と言えます。
+このアイデアをコードにしたのが以下です。
+
+------------------------------
+class Solution {
+  public int solution(String S, int W, int H) {
+    if (S == null) return -1;
+    switch (S.length()) {
+      case 1: return calculate1(W, H);
+      case 2: return calculate2(W, H);
+      case 3: return calculate3(W, H);
+      case 4: return calculate4(W, H);
+      case 5: return calculate5(W, H);
+      case 6: return calculate6(W, H);
+      case 7: return calculate7(W, H);
+      case 8: return calculate8(W, H);
+      case 9: return calculate9(W, H);
+    }
+    return -1;
+  }
+
+  int calculate1(int W, int H) { return -1; }
+  int calculate2(int W, int H) { return -1; }
+  int calculate3(int W, int H) { return -1; }
+  int calculate4(int W, int H) { return -1; }
+  int calculate5(int W, int H) { return -1; }
+  int calculate6(int W, int H) { return -1; }
+  int calculate7(int W, int H) { return -1; }
+  int calculate8(int W, int H) { return W * H / 2; }
+  int calculate9(int W, int H) { return W * H; }
+}
+------------------------------
+
+例えば、Ovalが追加になった場合、calculate4 関数にその公式を
+実装するという変更だけですみます。
+もちろん、この方法には文字列長が重ならないように図形名を工夫
+しなければいけない、という制約がありますし、不正な図形名でも
+文字列長がたまたま有効な図形名と同じだと -1 を返却しない等
+の問題があり、実用的ではありません。
+
+
+==============================
+解答例１０）親子関係
+==============================
+
+図形オブジェクト間に親子関係を持たせておき、子から親へと
+たどることで目的の図形オブジェクトを検索します。
+コードは以下のようになります。
+
+------------------------------
+class Solution {
+  AreaFormula shapes = new Rectangle(new Triangle(null));
+  public int solution(String S, int W, int H) {
+    AreaFormula af = shapes;
+    do {
+      if (af.getClass().getSimpleName().equals(S)) {
+        return af.calculate(W, H);
+      }
+    } while ((af = af.parent) != null);
+    return -1;
+  }
+}
+
+abstract class AreaFormula {
+  AreaFormula parent;
+  public AreaFormula(AreaFormula parent) { this.parent = parent; }
+  abstract int calculate(int W, int H);
+}
+
+class Rectangle extends AreaFormula {
+  public Rectangle(AreaFormula cause) { super(cause); }
+  public int calculate(int W, int H) { return W * H; }
+}
+
+class Triangle extends AreaFormula {
+  public Triangle(AreaFormula cause) { super(cause); }
+  public int calculate(int W, int H) { return W * H / 2; }
+}
+------------------------------
+
+この方法も技術的に可能というだけで実用性が極めて低いと
+言えます。
+オブジェクトの検索が逐次検索となるため、HashMapを利用
+する場合に比べ、パフォーマンス的に劣ると思われます。
+
+
+この他にも方法はいくつかあると思われますが、この辺で
+やめておきます。
+
+以上です。

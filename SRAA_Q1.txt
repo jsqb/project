@@ -1,0 +1,59 @@
+お待たせしました（誰も待ってないかもしれませんが）。
+２問目です。
+言語はJavaで、制限時間は特にありません。
+
+今回も問題の意味が読み取りづらい表現とかありましたら、
+指摘してもらえると助かります。
+
+よろしくお願いします。
+
+------------------------------
+
+[Question 1]
+
+A string S and two positive integers W and H are given.
+S represents a name of shape, such as "Rectangle",
+"Triangle". W and H represent the width (base) and
+height of the shape, respectively.
+The area of a rectangle whose sides are of length
+W and H is W * H, and the area of a triangle whose
+sides are of length W and H is W * H / 2.
+
+Calculate the area of shape, and cut off your answer
+after the decimal point, if necessary.
+For example, given string S = "Rectangle" and integers
+(W, H) = (3, 5) are:
+
+W * H = 3 * 5 = 15
+
+and given string S = "Triangle" and integers (W, H) =
+(3, 5) are:
+
+W * H / 2 = 3 * 5 / 2 = 7
+Notice that the actual area is 7.5 but the answer needs
+to be cut off after the decimal point.
+
+Write a class:
+
+class Solution1 { public int solution(String S, int W, int H); }
+
+that, given a string S and two integers W and H,
+returns the area of the shape. The method should
+return -1 if string S is unknown name.
+For example, given string S = "Rectangle" and integers
+(W, H) = (3, 5), the method should return 15, as
+explained above.
+
+We have a plan to add some more area formulas, for
+example, Oval, Rhombus. Your code should be designed
+to minimize the impact of changes. More precisely,
+new shapes should be able to be added without changing
+the solution method.
+Assume that:
+
+S is a string containing a name of shape:
+"Rectangle", "Triangle" or unknown name.
+
+W and H are integers within the range [1..10,000].
+
+------------------------------
