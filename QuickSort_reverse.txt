@@ -1,0 +1,66 @@
+import java.util.Arrays;
+public class QuickSort_reverse {
+
+	public static void main(String[] args) {
+		int[] a = {13, 8, 5, 2, 4, 0, 6, 9, 7, 3, 12, 1, 10, 11};
+		System.out.println(Arrays.toString(a));
+		quickSort(a);
+		System.out.println(Arrays.toString(a));
+		Arrays.sort(a);
+		System.out.println(Arrays.toString(a));
+	}
+
+	static void quickSort(int[] a) {
+		quickSort(a, 0, a.length-1);
+	}
+
+	static void quickSort(int[] a, int low, int high) {
+		if (low < high) {
+			//int q = partition(a, low, high); // asc
+			int q = partition_reverse(a, low, high); // desc
+			quickSort(a, low, q);
+			quickSort(a, q + 1, high);
+		}
+	}
+
+	static int partition(int[] a, int low, int high) {
+		int l = low, h = high;
+		int pivot = a[(l + h)/2];
+
+		while (true) {
+			while (a[l] < pivot) l++;
+			while (a[h] > pivot) h--;
+
+			if (l < h) {
+				int tmp = a[l];
+				a[l] = a[h];
+				a[h] = tmp;
+				l++;
+				h--;
+			} else {
+				return h;
+			}
+		}
+	}
+
+	static int partition_reverse(int[] a, int low, int high) {
+		int l = low, h = high;
+		int pivot = a[(l + h)/2];
+
+		while (true) {
+			while (a[l] > pivot) l++;
+			while (a[h] < pivot) h--;
+
+			if (l < h) {
+				int tmp = a[l];
+				a[l] = a[h];
+				a[h] = tmp;
+				l++;
+				h--;
+			} else {
+				return h;
+			}
+		}
+	}
+
+}

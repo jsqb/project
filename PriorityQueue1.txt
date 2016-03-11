@@ -1,0 +1,23 @@
+import java.util.*;
+public class PriorityQueue1 {
+
+	public static void main(String[] args) {
+
+		Queue<String> q = new PriorityQueue<String>(1, new QueueComparator<String>());
+
+		q.offer("aaa");
+		q.offer("b");
+		q.offer("cc");
+
+		while (!q.isEmpty()) {
+			//System.out.println(q.peek());
+			System.out.println(q.poll());
+		}
+	}
+
+	static class QueueComparator<T> implements Comparator<T> {
+		public int compare(T t1, T t2) {
+			return t1.toString().length() - t2.toString().length(); // asc (shorter string is higher priority)
+		}
+	}
+}

@@ -1,0 +1,43 @@
+import java.util.Arrays;
+public class QuickSort {
+
+	public static void main(String[] args) {
+		int[] a = {13, 8, 5, 2, 4, 0, 6, 9, 7, 3, 12, 1, 10, 11};
+		System.out.println(Arrays.toString(a));
+		quickSort(a);
+		System.out.println(Arrays.toString(a));
+	}
+
+	static void quickSort(int[] a) {
+		quickSort(a, 0, a.length-1);
+	}
+
+	static void quickSort(int[] a, int low, int high) {
+		if (low >= high) return;
+		int l = low, h = high;
+
+		// get the pivot element from the middle of the list
+		int pivot = a[(l + h)/2];
+
+		// narrow the list
+		while (l <= h) {
+			// narrow left side
+			while (a[l] < pivot) l++;
+			// narrow right side
+			while (a[h] > pivot) h--;
+
+			// swap
+			if (l <= h) {
+				int tmp = a[l];
+				a[l] = a[h];
+				a[h] = tmp;
+				l++;
+				h--;
+			}
+		}
+
+		if (low < h) quickSort(a, low, h);
+		if (l < high) quickSort(a, l, high);
+	}
+
+}

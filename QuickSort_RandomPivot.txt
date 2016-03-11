@@ -1,0 +1,38 @@
+public class QuickSort_RandomPivot {
+	public static void main(String[] args) {
+		int[] x = {13, 8, 5, 2, 4, 0, 6, 9, 7, 3, 12, 1, 10, 11};
+		printArray(x);
+		quickSort(x, 0, x.length-1);
+		printArray(x);
+	}
+
+	private static void quickSort(int[] x, int l, int u) {
+		int i, m;
+		if (l >= u) return;
+		swap(x, l, randint(l, u));
+		m = l;
+
+		for (i = l+1; i <= u; i++)
+			if (x[i] < x[l])
+				swap(x, ++m, i);
+
+		swap(x, l, m);
+		quickSort(x, l, m-1);
+		quickSort(x, m+1, u);
+	}
+
+	private static int randint(int l, int u) {
+		return (int)(Math.random() * (u-l+1)) + l;
+	}
+
+	private static void swap(int[] x, int i, int j) {
+		int t = x[i];
+		x[i] = x[j];
+		x[j] = t;
+	}
+
+	private static void printArray(int[] x) {
+		for (int n : x) System.out.print(n+" ");
+		System.out.println();
+	}
+}

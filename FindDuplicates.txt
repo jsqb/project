@@ -1,0 +1,55 @@
+import java.util.*;
+public class FindDuplicates {
+
+	private static int[] data1 = new int[1000];
+	private static int[] data2 = new int[1000];
+	static {
+		for (int i=0; i<1000; i++) {
+			data1[i] = i;
+			data2[i] = i;
+		}
+		data1[50] = 1;
+	}
+
+	public static void main(String[] args) {
+		System.out.println("true ==> "+hasDuplicates(data1));
+		System.out.println("false ==> "+hasDuplicates(data2));
+
+		System.out.println("true ==> "+hasDuplicates_Set(data1));
+		System.out.println("false ==> "+hasDuplicates_Set(data2));
+
+		System.out.println("true ==> "+hasDuplicates_Array(data1));
+		System.out.println("false ==> "+hasDuplicates_Array(data2));
+	}
+
+	// O(n^2)
+	private static boolean hasDuplicates(int[] data) {
+		for (int i=0; i<data.length; i++) {
+			for (int j=i+1; j<data.length; j++) {
+				if (/*i != j &&*/ data[i] == data[j]) return true;
+			}
+		}
+		return false;
+	}
+
+	// O(n) but pay for autoboxing
+	private static boolean hasDuplicates_Set(int[] data) {
+		Set<Integer> nums = new HashSet<Integer>();
+		for (int n : data) {
+			if (!nums.add(n)) return true;
+		}
+		return false;
+	}
+
+	// O(n)
+	private static boolean hasDuplicates_Array(int[] data) {
+		boolean[] map = new boolean[data.length];
+		for (int n : data) {
+			if (map[n]) return true;
+			map[n] = true;
+		}
+		return false;
+	}
+
+
+}

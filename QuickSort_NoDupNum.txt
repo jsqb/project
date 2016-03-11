@@ -1,0 +1,42 @@
+import java.util.*;
+public class QuickSort_NoDupNum {
+
+	public static void main(String[] args) {
+		int[] a = {1, 4, 1, 2, 3};
+		System.out.println(Arrays.toString(a));
+		a = quickSort(a);
+		System.out.println(Arrays.toString(a));
+	}
+
+	static int[] quickSort(int[] a) {
+		List<Integer> list = new ArrayList<Integer>();
+		for (int n : a) list.add(n);
+		quickSort(list);
+
+		int[] b = new int[list.size()];
+		for (int i=0; i<b.length; i++) b[i] = list.get(i);
+		return b;
+	}
+
+	static void quickSort(List<Integer> a) {
+		if (a.isEmpty()) return;
+
+		int pivot = a.get(0);
+
+		List<Integer> left  = new ArrayList<Integer>();
+		List<Integer> right = new ArrayList<Integer>();
+
+		for (int n : a) {
+			if (n < pivot) left.add(n);
+			else if (n > pivot) right.add(n);
+		}
+
+		quickSort(left);
+		quickSort(right);
+
+		a.clear();
+		a.addAll(left);
+		a.add(pivot);
+		a.addAll(right);
+	}
+}

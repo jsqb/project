@@ -1,0 +1,35 @@
+public class CustomStack {
+
+	public static void main(String[] args) {
+		Stack<String> s = new Stack<String>();
+		s.push("a");
+		s.push("b");
+		s.push("c");
+
+		System.out.println("false ==> "+s.isEmpty());
+		System.out.println("c ==> "+s.pop());
+		System.out.println("b ==> "+s.pop());
+		System.out.println("a ==> "+s.pop());
+		System.out.println("true ==> "+s.isEmpty());
+	}
+
+	private static class Stack<E> {
+		Object[] nodes = new Object[100];
+		int sp = 0;
+
+		public void push(E node) {
+			nodes[sp++] = node;
+		}
+
+		@SuppressWarnings("unchecked")
+		public E pop() {
+			if (isEmpty()) return null;
+			return (E) nodes[--sp];
+		}
+
+		public boolean isEmpty() {
+			return sp == 0;
+		}
+	}
+
+}

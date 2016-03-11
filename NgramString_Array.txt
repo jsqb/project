@@ -1,0 +1,50 @@
+import java.util.*;
+
+public class NgramString_Array {
+	private static char[][] trigrams = new char[100][3]; // [max][tri]
+	private static int triCount = 0;
+	private static int[] counts = new int[100];
+
+	public static void main(String[] args) {
+		makeIndexMap("ABCJFJWEJABCIEKDABCCJF");
+
+		for (int i=0; i<triCount; i++) {
+			System.out.println("map="+Arrays.toString(trigrams[i]));
+		}
+
+		// Show high frequency trigram
+		int maxCount = 0, maxIdx = -1;
+		for (int i=0; i<triCount; i++) {
+			if (counts[i] > maxCount) {
+				maxCount = counts[i];
+				maxIdx = i;
+			}
+		}
+		System.out.println(Arrays.toString(trigrams[maxIdx])+" count("+maxCount+")");
+	}
+
+	private static void makeIndexMap(final String TEXT) {
+		for (int i=0, len=TEXT.length()-3; i<=len; i++) {
+			char c0 = TEXT.charAt(i);
+			char c1 = TEXT.charAt(i+1);
+			char c2 = TEXT.charAt(i+2);
+
+			int j;
+			for (j=0; j<triCount; j++) {
+				if (trigrams[j][0] == c0 && trigrams[j][1] == c1 && trigrams[j][2] == c2) {
+					counts[j]++;
+					break;
+				}
+			}
+
+			if (j == triCount) {
+				triCount++;
+				trigrams[j][0] = c0;
+				trigrams[j][1] = c1;
+				trigrams[j][2] = c2;
+				counts[j] = 1;
+			}
+		}
+	}
+
+}

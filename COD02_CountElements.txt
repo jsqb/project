@@ -1,0 +1,38 @@
+public class COD02_CountElements {
+	public static void main(String[] args) {
+		int[] A = new int[]{0, 0, 4, 2, 5};
+		Test.assertEquals(new int[]{2, 0, 1, 0, 1, 1}, solution1(A, 5));
+		Test.assertEquals(new int[]{2, 0, 1, 0, 1, 1}, solution2(A, 5));
+		Test.printResults();
+	}
+
+	// Counting elements
+
+	// O(N * M)
+	// A : array of data
+	// m : maximum value in the array of A
+	private static int[] solution1(int[] A, int m) {
+		int[] count = new int[m+1];
+
+		for (int i=0; i<=m; i++) {
+			for (int n : A) {
+				if (n == i) count[i]++;
+			}
+		}
+
+		return count;
+	}
+
+	// Use the array value as the array subscript of 'count'
+	// O(N + M)
+	// A : array of data
+	// m : maximum value in the array of A
+	private static int[] solution2(int[] A, int m) {
+		int[] count = new int[m+1];
+
+		for (int n : A) count[n]++;
+
+		return count;
+	}
+
+}

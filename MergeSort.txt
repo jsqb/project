@@ -1,0 +1,42 @@
+public class MergeSort {
+	public static void main(String[] args) {
+		int[] a = {3,5,8,2,7,4,1,6};
+		printArray(a);
+		mergeSort(a);
+		printArray(a);
+	}
+
+	private static void printArray(int[] a) {
+		for (int n : a) System.out.print(n+" ");
+		System.out.println();
+	}
+
+	// running time
+	// O(n) * log2(n) = O(nlog2(n))
+	private static void mergeSort(int[] a) {
+		int len = a.length;
+		if (len <= 1) return;
+
+		int mid = len / 2;
+
+		int[] left = new int[mid], right = new int[len-mid];
+		System.arraycopy(a, 0, left, 0, left.length);
+		System.arraycopy(a, mid, right, 0, right.length);
+
+		mergeSort(left);
+		mergeSort(right);
+
+		int l = 0, r = 0, i = 0;
+
+		while (l < left.length && r < right.length) {
+			if (left[l] <= right[r]) {
+				a[i++] = left[l++];
+			} else {
+				a[i++] = right[r++];
+			}
+		}
+
+		while (l < left.length) a[i++] = left[l++];
+		while (r < right.length) a[i++] = right[r++];
+	}
+}

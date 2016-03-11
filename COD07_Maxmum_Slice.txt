@@ -1,0 +1,75 @@
+public class Solution {
+	public static void main(String[] args) {
+		int[] A = new int[]{7,-7,3,5,-2,4,-1};
+		Test.assertEquals(10, solution1(A));
+		Test.assertEquals(10, solution2(A));
+		Test.assertEquals(10, solution3(A));
+		Test.assertEquals(10, solution4(A));
+		Test.printResults();
+	}
+
+	// Maximum slice
+
+	// O(n^3)
+	private static int solution1(int[] A) {
+		int N = A.length, max = 0;
+
+		for (int len=1; len<=N; len++) {
+			for (int p=0; p<N-len; p++) {
+				int sum = 0;
+				for (int i=p; i<p+len; i++) {
+					sum += A[i];
+				}
+				if (sum > max) max = sum;
+			}
+		}
+
+		return max;
+	}
+
+	// O(n^2) using Prefix Sum
+	private static int solution2(int[] A) {
+		int N = A.length, max = 0;
+		int[] pSums = new int[N];
+
+		// Generate prefix sum array
+		pSums[0] = 0;
+		for (int i=1; i<N; i++) {
+			pSums[i] = pSums[i-1] + A[i];
+		}
+
+		for (int len=1; len<=N; len++) {
+			for (int p=0; p<N-len; p++) {
+				int sum = pSums[p+len] - pSums[p];
+				if (sum > max) max = sum;
+			}
+		}
+		return max;
+	}
+
+	// O(n^2) without using Prefix sum
+	private static int solution3(int[] A) {
+		int N = A.length, max = 0;
+
+		for (int len=1; len<=N; len++) {
+			int sum = 0;
+			for (int p=0; p<N-len; p++) {
+				sum += A[p];
+				if (sum > max) max = sum;
+			}
+		}
+		return max;
+	}
+
+	// O(n)
+	private static int solution4(int[] A) {
+		int N = A.length, max_ending = 0, max_slice = 0;
+
+		for (int n : A) {
+			max_ending = Math.max(0, max_ending + n);
+			max_slice = Math.max(max_slice, max_ending);
+		}
+		return max_slice;
+	}
+
+}

@@ -1,0 +1,59 @@
+import java.util.*;
+public class BFS {
+	public static void main(String[] args) {
+		new BFS().test();
+	}
+
+	private void test() {
+		Node a = new Node("a");
+		Node b = new Node("b");
+		Node c = new Node("c");
+		Node d = new Node("d");
+		Node e = new Node("e");
+		Node f = new Node("f");
+
+		a.addChild(b);
+		a.addChild(c);
+		c.addChild(d);
+		c.addChild(e);
+		b.addChild(f);
+
+		bfs(a);
+	}
+
+	private void bfs(Node start) {
+		Queue<Node> s = new LinkedList<Node>();
+		s.offer(start);
+
+		while (!s.isEmpty()) {
+			Node top = s.poll();
+			System.out.println("node:"+top.id);
+
+			if (!top.hasVisited && "f".equals(top.id)) {
+				System.out.println("Found node f");
+				return;
+			}
+
+			top.hasVisited = true;
+
+			for (Node ch : top.childNodes) {
+				s.offer(ch);
+			}
+		}
+	}
+
+	private class Node {
+		String id;
+		boolean hasVisited = false;
+		List<Node> childNodes = new ArrayList<Node>();
+
+		public Node(String id) {
+			this.id = id;
+		}
+
+		public void addChild(Node n) {
+			childNodes.add(n);
+		}
+	}
+
+}

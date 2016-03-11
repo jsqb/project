@@ -1,0 +1,97 @@
+import java.util.*;
+
+public class Dijkstra_PQ {
+	private static final int INF = 1000000;
+
+	public static void main(String[] args) {
+		Node a = new Node("a");
+		Node b = new Node("b");
+		Node c = new Node("c");
+		Node d = new Node("d");
+		Node e = new Node("e");
+		Node f = new Node("f");
+
+		a.addEdge(b, 5);
+		a.addEdge(c, 4);
+		a.addEdge(d, 2);
+		b.addEdge(a, 5);
+		b.addEdge(c, 2);
+		b.addEdge(f, 6);
+		c.addEdge(a, 4);
+		c.addEdge(b, 2);
+		c.addEdge(d, 3);
+		c.addEdge(e, 2);
+		d.addEdge(a, 2);
+		d.addEdge(c, 3);
+		d.addEdge(e, 6);
+		e.addEdge(c, 2);
+		e.addEdge(d, 6);
+		e.addEdge(f, 4);
+		f.addEdge(b, 6);
+		f.addEdge(e, 4);
+
+		computePaths(a); // run Dijkstra
+		System.out.println("Distance to " + f.name + ": " + f.minCost);
+
+		System.out.println("Shortest Path: f => e => c => a");
+		Node n = f;
+		while (n != null) {
+			System.out.print(n.name+" ");
+			n = n.previous;
+		}
+		System.out.println();
+	}
+
+	public static void computePaths(Node start) {
+		start.minCost = 0;
+
+		PriorityQueue<Node> pq = new PriorityQueue<Node>();
+		pq.offer(start);
+
+		while (!pq.isEmpty()) {
+			Node top = pq.poll(); // min cost node
+
+			// Visit child nodes through top node
+			for (Edge e : top.edges) {
+				Node next = e.node;
+				int nextCost = top.minCost + e.cost;
+				if (nextCost < next.minCost) {
+					//pq.remove(next);
+					next.minCost = nextCost;
+					next.previous = top;
+					pq.offer(next);
+        }
+			}
+		}
+	}
+
+	private static class Node implements Comparable<Node> {
+		String name;
+		List<Edge> edges = new ArrayList<Edge>();
+		int minCost = INF;
+		Node previous;
+
+		Node(String name) {
+			this.name = name;
+		}
+
+		void addEdge(Node node, int cost) {
+			edges.add(new Edge(node, cost));
+		}
+
+    public int compareTo(Node other) {
+			//return Integer.compare(minCost, other.minCost); // for Java SE 7 or above
+			return minCost - other.minCost; // for Java SE 6 or below
+		}
+	}
+
+	private static class Edge {
+    Node node;
+    int cost;
+    public Edge(Node node, int cost) {
+			this.node = node;
+			this.cost = cost;
+		}
+	}
+
+}

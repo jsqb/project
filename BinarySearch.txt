@@ -1,0 +1,30 @@
+public class BinarySearch {
+	public static void main(String[] args) {
+		int[] a = {1,2,3,4,5,6,7,8}; // sorted in ascending order
+		System.out.println("Index="+binarySearch(a, 4)+" (expected # is 3)");
+		System.out.println("Index="+binarySearch(a, 9)+" (expected # is -1)");
+
+		System.out.println("Index="+java.util.Arrays.binarySearch(a, 4)+" (expected # is 3)");
+	}
+
+	// running time
+	// Worst case: log2(n)
+	private static int binarySearch(int[] a, int n) {
+		return binarySearch(a, n, 0, a.length-1);
+	}
+
+	private static int binarySearch(int[] a, int n, int left, int right) {
+		if (left > right) return -1;
+
+		int mid = (right - left)/2 + left;
+
+		if (a[mid] == n) {
+			return mid;
+		} else if (a[mid] > n) {
+			right = mid -1;
+		} else {
+			left = mid + 1;
+		}
+		return binarySearch(a, n, left, right);
+	}
+}

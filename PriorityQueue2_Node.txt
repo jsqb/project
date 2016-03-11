@@ -1,0 +1,30 @@
+import java.util.*;
+public class PriorityQueue2_Node {
+
+	public static void main(String[] args) {
+
+		PriorityQueue<Node> q = new PriorityQueue<Node>();
+
+		q.offer(new Node("aaa"));
+		q.offer(new Node("b"));
+		q.offer(new Node("cc"));
+
+		while (!q.isEmpty()) {
+			//System.out.println(q.peek().data);
+			System.out.println(q.poll().data);
+		}
+	}
+
+	private static class Node implements Comparable<Node> {
+		String data;
+
+		public Node(String data) {
+			this.data = data;
+		}
+
+		public int compareTo(Node node) {
+			return data.length() - node.data.length(); // asc (shorter string is higher priority)
+		}
+	}
+
+}

@@ -1,0 +1,40 @@
+// Boyer-Moore
+import java.util.*;
+public class SearchWord_BM {
+	public static void main(String[] args) {
+		System.out.println("8 ==> " + findBM("ababdeacababccc", "ababc"));
+	}
+
+	private static Map<Character, Integer> getBMSkip(String str) {
+		Map<Character, Integer> skipOffset = new HashMap<Character, Integer>();
+
+		for (int i=0; i < str.length()-1; i++) {
+			skipOffset.put(str.charAt(i), str.length()-i-1);
+		}
+
+		return skipOffset;
+	}
+
+	private static int skip(Map<Character, Integer> skipOffset, String text, int pos, String str) {
+		char c = text.charAt(pos);
+		return skipOffset.containsKey(c) ? skipOffset.get(c) : str.length();
+	}
+
+	private static int findBM(final String TEXT, String str) {
+		Map<Character, Integer> skipOffset = getBMSkip(str);
+		int last = str.length() - 1;
+
+		for (int pos = last; pos < TEXT.length(); pos += skip(skipOffset, TEXT, pos, str)) {
+			int i = pos;
+			int j = last;
+			while (j >= 0) {
+				if (TEXT.charAt(i) != str.charAt(j)) break;
+				i--;
+				j--;
+			}
+			if (j < 0) return i+1;
+		}
+		return -1;
+	}
+
+}

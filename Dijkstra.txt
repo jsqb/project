@@ -1,0 +1,94 @@
+import java.util.*;
+public class Dijkstra {
+	private static final int MAX_VAL = 100000;
+	public static void main(String[] args) {
+		Node a = new Node("a");
+		Node b = new Node("b");
+		Node c = new Node("c");
+		Node d = new Node("d");
+		Node e = new Node("e");
+		Node f = new Node("f");
+
+		Node[] nodes = new Node[]{a,b,c,d,e,f};
+
+		a.addEdge(b, 5);
+		a.addEdge(c, 4);
+		a.addEdge(d, 2);
+		b.addEdge(a, 5);
+		b.addEdge(c, 2);
+		b.addEdge(f, 6);
+		c.addEdge(a, 4);
+		c.addEdge(b, 2);
+		c.addEdge(d, 3);
+		c.addEdge(e, 2);
+		d.addEdge(a, 2);
+		d.addEdge(c, 3);
+		d.addEdge(e, 6);
+		e.addEdge(c, 2);
+		e.addEdge(d, 6);
+		e.addEdge(f, 4);
+		f.addEdge(b, 6);
+		f.addEdge(e, 4);
+
+		/////////////////////////
+
+		a.cost = 0; // goal
+
+		while (true) {
+			int minCost = MAX_VAL;
+			Node minNode = null;
+
+			// Choose a start node (min-cost node)
+			for (Node n : nodes) {
+				if (!n.hasVisited && n.cost < minCost) {
+					minCost = n.cost;
+					minNode = n;
+				}
+			}
+
+			if (minNode == null) break; // not unvisited node found
+			minNode.hasVisited = true;
+
+			for (Edge ed : minNode.edges) {
+				int newCost = minNode.cost + ed.transCost;
+				if (newCost < ed.node.cost) {
+					ed.node.cost = newCost;
+					ed.node.toStart = minNode;
+				}
+			}
+		}
+
+		System.out.println("Shortest Path: f => e => c => a");
+		Node n = f;
+		while (n != null) {
+			System.out.println(n.name);
+			n = n.toStart;
+		}
+	}
+
+	private static class Node {
+		String name = null;
+		List<Edge> edges = new ArrayList<Edge>();
+		int cost = MAX_VAL; // total
+		Node toStart = null;
+		boolean hasVisited = false;
+
+		public Node(String name) {
+			this.name = name;
+		}
+
+		public void addEdge(Node n, int cost) {
+			edges.add(new Edge(n, cost));
+		}
+	}
+
+	private static class Edge {
+		Node node = null;
+		int transCost = 0; // transportation cost
+		public Edge(Node node, int transCost) {
+			this.node = node;
+			this.transCost = transCost;
+		}
+	}
+
+}

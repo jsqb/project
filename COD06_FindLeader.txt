@@ -1,0 +1,51 @@
+import java.util.*;
+public class FindLeader {
+	public static void main(String[] args) {
+		int[] A = new int[]{6, 8, 4, 6, 8, 6, 6};
+		Test.assertEquals(6, solution1(A));
+		Test.assertEquals(6, solution2(A));
+		Test.assertEquals(6, solution3(A));
+	}
+
+	// O(n^2)
+	// A : array of data
+	private static int solution1(int[] A) {
+		int N = A.length;
+		for (int n : A) {
+			int count = 0;
+			for (int m : A) {
+				if (n == m) count++;
+			}
+			if (count > N/2) return n;
+		}
+		return -1;
+	}
+
+	// O(n * log(n))
+	// after soring, the center value should be a leader if leader exists
+	private static int solution2(int[] A) {
+		int N = A.length;
+		Arrays.sort(A); // O(log(n))
+		int candidate = A[N/2];
+
+		int count = 0;
+		for (int n : A) {
+			if (n == candidate) count++;
+		}
+		return count > N/2 ? candidate : -1;
+	}
+
+	// O(n) using Stack
+	private static int solution3(int[] A) {
+		Stack<Integer> s = new Stack<Integer>();
+		for (int n : A) {
+			if (s.isEmpty() || s.peek() == n) {
+				s.push(n);
+			} else {
+				s.pop();
+			}
+		}
+		return !s.isEmpty() ? s.peek() : -1;
+	}
+
+}

@@ -1,0 +1,21 @@
+O(1) - Constants
+O(N) - Array with N elements, single loop
+O(N^2) - Double loops
+
+
+------------------------
+O(log(N))       10^-7 seconds
+O(N)            10^-6 seconds
+O(N * log(N))   10^-5 seconds
+O(N^2)          10^-4 seconds
+O(N^6)          3 minutes
+O(2^N)          1014 years.
+O(N!)           10142 years.
+------------------------
+
+
+[Expected time complexity]
+
+N <= 1,000,000  ==>  O(N) or O(N * log(N))
+N <= 10,000     ==>  O(N^2)
+N <= 500        ==>  O(N^3)

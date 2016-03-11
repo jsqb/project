@@ -1,0 +1,43 @@
+import java.util.*;
+public class SearchWord_Ngram {
+	public static void main(String[] args) {
+		System.out.println("6 ==> " + find("First Fly Filter File", "Fly"));
+	}
+
+	// n = {1, 2, 3}
+	private static Map<String, List<Integer>> getNGramHash(String text, int n) {
+		Map<String, List<Integer>> hash = new HashMap<String, List<Integer>>();
+		for (int i = 0; i < text.length()+1-n; i++) {
+			String key = text.substring(i, i+n);
+			if (!hash.containsKey(key)) {
+				hash.put(key, new ArrayList<Integer>());
+			}
+			hash.get(key).add(i);
+		}
+System.out.println("hash="+hash);
+		return hash;
+	}
+
+	private static int find(final String TEXT, String str) {
+		int n = 1;
+		Map<String, List<Integer>> index_hash = getNGramHash(TEXT, n);
+ 
+		String index_str = str.substring(0, n);
+		List<Integer> index_item = index_hash.get(index_str);
+
+		for (int i = 0; index_item != null && i < index_item.size(); i++) {
+			int index = index_item.get(i);
+			boolean isFound = true;
+			for (int j = n; j < str.length(); j++) {
+//System.out.println("[CMP] str("+j+")=("+str.charAt(j)+")  TEXT("+(index+j)+")=("+TEXT.charAt(index + j)+")");
+				if (str.charAt(j) != TEXT.charAt(index + j)) {
+					isFound = false;
+					break;
+				}
+			}
+			if (isFound) return index;
+		}
+		return -1;
+	}
+
+}

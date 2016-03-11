@@ -1,0 +1,40 @@
+import java.util.*;
+public class QuickSort_NoDupStr {
+
+	public static void main(String[] args) {
+		String[] a = {"apple", "melon", "apple", "lemon", "apple"};
+		System.out.println(Arrays.toString(a));
+		a = quickSort(a);
+		System.out.println(Arrays.toString(a));
+	}
+
+	static String[] quickSort(String[] a) {
+		List<String> list = new ArrayList<String>();
+		for (String s : a) list.add(s);
+		quickSort(list);
+
+		return list.toArray(new String[0]);
+	}
+
+	static void quickSort(List<String> a) {
+		if (a.isEmpty()) return;
+
+		String pivot = a.get(0);
+
+		List<String> left  = new ArrayList<String>();
+		List<String> right = new ArrayList<String>();
+
+		for (String s : a) {
+			if (s.compareTo(pivot) < 0) left.add(s);
+			else if (s.compareTo(pivot) > 0) right.add(s);
+		}
+
+		quickSort(left);
+		quickSort(right);
+
+		a.clear();
+		a.addAll(left);
+		a.add(pivot);
+		a.addAll(right);
+	}
+}

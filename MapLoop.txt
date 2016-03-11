@@ -1,0 +1,39 @@
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
+
+public class MapLoop {
+
+	public static void main(String[] atgs) {
+		String[] testKeys = { "Apple", "Melon", "Banana", "Blackberry" };
+		String[] testValues = { "Red", "Green", "Yellow", "Black" };
+
+		Map<String, String> m = new HashMap<String, String>();
+
+		for (int i = 0; i < testKeys.length; i++) {
+			m.put(testKeys[i], testValues[i]);
+		}
+
+		for (Iterator it=m.entrySet().iterator(); it.hasNext();) {
+			Map.Entry e = (Map.Entry)it.next();
+			System.out.println("Key: " + e.getKey() + ", Value: " + e.getValue());
+		}
+
+		for (Iterator<Map.Entry<String, String>> it=m.entrySet().iterator(); it.hasNext();) {
+			Map.Entry e = it.next();
+			if ("Melon".equals(e.getKey())) {
+				it.remove();
+			}
+		}
+
+		for (String key : m.keySet()) {
+			System.out.println("[JDK5] Key: " + key + ", Value: " + m.get(key));
+		}
+
+		for (Map.Entry<String, String> entry : m.entrySet()) {
+			System.out.println("[Entry] key=("+entry.getKey()+") value=("+entry.getValue()+")");
+		}
+
+	}
+}
