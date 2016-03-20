@@ -1,0 +1,19 @@
+System.out.println("------------------------------");
+System.out.println(toSqlString(criteria));
+System.out.println("------------------------------");
+
+public static String toSqlString(org.hibernate.Criteria criteria) {
+	org.hibernate.impl.CriteriaImpl criteriaImpl = (org.hibernate.impl.CriteriaImpl)criteria;
+	org.hibernate.engine.SessionImplementor session = criteriaImpl.getSession();
+	org.hibernate.engine.SessionFactoryImplementor factory = session.getFactory();
+	org.hibernate.loader.criteria.CriteriaQueryTranslator translator=new org.hibernate.loader.criteria.CriteriaQueryTranslator(factory,criteriaImpl,criteriaImpl.getEntityOrClassName(),org.hibernate.loader.criteria.CriteriaQueryTranslator.ROOT_SQL_ALIAS);
+	String[] implementors = factory.getImplementors( criteriaImpl.getEntityOrClassName() );
+
+	org.hibernate.loader.criteria.CriteriaJoinWalker walker = new org.hibernate.loader.criteria.CriteriaJoinWalker((org.hibernate.persister.entity.OuterJoinLoadable)factory.getEntityPersister(implementors[0]), 
+                        translator,
+                        factory, 
+                        criteriaImpl, 
+                        criteriaImpl.getEntityOrClassName(), 
+                        session.getLoadQueryInfluencers()   );
+	return walker.getSQLString();
+}
